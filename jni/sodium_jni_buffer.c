@@ -10,6 +10,8 @@
 #include <stdbool.h>
 #include "sodium.h"
 
+extern int __android_log_print(int prio, const char* tag, const char* fmt, ...);
+
 #define STODIUM_JNI(type, method) JNIEXPORT type JNICALL Java_eu_artemisc_stodium_StodiumJNI_##method
 
 /**
@@ -51,7 +53,7 @@
 #define AS_OUTPUT(type, buffer)     ((type *)       (buffer.content + buffer.offset))
 
 #define AS_INPUT_LEN(type, buffer)  ((type)   (buffer.capacity))
-#define AS_OUTPUT_LEN(type, buffer) ((type *) (buffer.capacity))
+#define AS_OUTPUT_LEN(type, buffer) ((type *) (&buffer.capacity))
 
 /**
  * Beginning of the real C code.
@@ -126,6 +128,7 @@ void stodium_get_buffer(JNIEnv *jenv, stodium_buffer *dst, jobject jbuffer) {
         dst->offset    = 0;
         dst->capacity  = 0;
         dst->is_direct = true; // A null buffer can be treated as direct
+        __android_log_print(3, "STODIUM", "stodium_get_buffer(NULL)");
         return;
     }
 
@@ -136,6 +139,7 @@ void stodium_get_buffer(JNIEnv *jenv, stodium_buffer *dst, jobject jbuffer) {
         dst->offset    = 0;
         dst->capacity  = (size_t) (*jenv)->GetDirectBufferCapacity(jenv, jbuffer);
         dst->is_direct = true;
+        __android_log_print(3, "STODIUM", "stodium_get_buffer(Direct ByteBuffer, capacity = %d)", dst->capacity);
         return;
     }
 
@@ -148,6 +152,7 @@ void stodium_get_buffer(JNIEnv *jenv, stodium_buffer *dst, jobject jbuffer) {
     dst->offset        = (size_t) (*jenv)->CallIntMethod(jenv, jbuffer, stodium_g_byte_buffer_method_array_offset);
     dst->capacity      = (size_t) (*jenv)->CallIntMethod(jenv, jbuffer, stodium_g_byte_buffer_method_remaining);
     dst->is_direct     = false;
+    __android_log_print(3, "STODIUM", "stodium_get_buffer(Indirect ByteBuffer)");
     return;
 }
 

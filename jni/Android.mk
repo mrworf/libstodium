@@ -53,7 +53,7 @@ LOCAL_MODULE    := stodiumjni
 LOCAL_SRC_FILES :=  \
 	sodium_jni_buffer.c
 APP_UNIFIED_HEADERS := true
-LOCAL_LDFLAGS   += -fPIC
+LOCAL_LDFLAGS   += -fPIC -llog
 #LOCAL_LDLIBS   += -Wl,--no-warn-shared-textrel
 #LOCAL_DISABLE_FATAL_LINKER_WARNINGS := true
 LOCAL_CFLAGS    += -Wall -g -pedantic -Wno-variadic-macros -std=c99 #-v
