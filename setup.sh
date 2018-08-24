@@ -1,13 +1,13 @@
 #!/bin/bash
 set -e
-set -x
+#set -x
 
 # Android NDK r12b
 export NDK_VERSION="android-ndk-r14b"
 export NDK_OSFAMILY="linux"
 export SWIG_VERSION="swig-3.0.8"
 
-export NDK_PLATFORM="android-9"
+export NDK_PLATFORM="android-14"
 
 # Require JAVA_HOME
 if [ -z "$JAVA_HOME" ]; then
@@ -33,7 +33,7 @@ function ndk_setup {
 }
 
 function ndk_cleanup {
-    rm -rf ${NDK_VERSION}* 
+    rm -rf ${NDK_VERSION}*
 }
 
 #
@@ -44,7 +44,7 @@ function swig_setup {
 
     wget https://prdownloads.sourceforge.net/swig/${SWIG_VERSION}.tar.gz
     tar -xvf ${SWIG_VERSION}.tar.gz
-    
+
     cd ${SWIG_VERSION}
 
     ./autogen.sh
@@ -75,7 +75,8 @@ function setup_libsodium {
     cd libsodium
 
     # use stable branch
-    # git fetch && git checkout origin/stable
+    git fetch && git checkout origin/stable
+    git clean -ffxd
 
     ./autogen.sh
 
@@ -86,13 +87,15 @@ function setup_libsodium {
     sudo ldconfig
 
     # Disable minimal in android builds
-    sed --in-place '/--enable-minimal/d' ./dist-build/android-build.sh
+    #sed --in-place '/--enable-minimal/d' ./dist-build/android-build.sh
 
     # Build android
     ./dist-build/android-arm.sh
     ./dist-build/android-armv7-a.sh
-    ./dist-build/android-mips32.sh
+    ./dist-build/android-armv8-a.sh
+    #./dist-build/android-mips32.sh # Not used or supported anymore
     ./dist-build/android-x86.sh
+    ./dist-build/android-x86_64.sh
     cd ..
 }
 
@@ -107,18 +110,71 @@ function compile_jni {
     cd ..
 }
 
-# Add auto-cleanup before the script runs
-ndk_cleanup
-#swig_cleanup
+STEP_DOWNLOAD=false
+STEP_SODIUM=false
+STEP_JNI=true
+STEP_CLEANUP=false
 
-# Download and install
-ndk_setup
-#swig_setup
+POSITIONAL=()
+while [[ $# -gt 0 ]]; do
+	key="$1"
 
-# Compile the libraries
-setup_libsodium
-compile_jni
+	case $key in
+		--download)
+		STEP_DOWNLOAD=true
+		shift
+		;;
+		--sodium)
+		STEP_SODIUM=true
+		;;
+		--no-jni)
+		STEP_JNI=false
+		;;
+		--cleanup)
+		STEP_CLEANUP=true
+		;;
+		--help|-h)
+		cat <<EOT
+Options for setup.sh:
+  --download     Download and setup NDK and SWIG
+  --sodium       Initialize and build libsodium
+  --no-jni       Don't build the JNI bindings
+  --cleanup      Remove NDK and SWIG
+  --help         This message
+EOT
+		exit 0
+		;;
+		*)    # unknown option
+		echo "Invalid argument: $key"
+		exit 255
+		;;
+	esac
+done
 
-# Cleanup
-ndk_cleanup
-#swig_cleanup
+if $STEP_DOWNLOAD ; then
+	echo "Downloading necessary tools..."
+	# Add auto-cleanup before the script runs
+	ndk_cleanup
+	swig_cleanup
+
+	# Download and install
+	ndk_setup
+	swig_setup
+fi
+
+if $STEP_SODIUM ; then
+	echo "Building libsodium..."
+	setup_libsodium
+fi
+
+if $STEP_JNI ; then
+	echo "Building libsodium bindings..."
+	compile_jni
+fi
+
+if $STEP_CLEANUP ; then
+	echo "Cleaning up..."
+	# Cleanup
+	ndk_cleanup
+	swig_cleanup
+fi
