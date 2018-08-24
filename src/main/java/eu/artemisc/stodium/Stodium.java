@@ -287,7 +287,7 @@ public final class Stodium {
      */
     @NotNull
     public static ByteBuffer ensureUsableByteBuffer(final @NotNull ByteBuffer buff) {
-        if (buff.isDirect() || !buff.isReadOnly()) {
+        if (buff == null || buff.isDirect() || !buff.isReadOnly()) {
             return buff;
         }
 

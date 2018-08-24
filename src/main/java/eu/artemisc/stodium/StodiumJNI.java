@@ -7,6 +7,8 @@
  */
 package eu.artemisc.stodium;
 
+import android.util.Log;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
