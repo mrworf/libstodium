@@ -98,7 +98,7 @@ public final class Stodium {
                                  final long lower,
                                  final long upper)
             throws ConstraintViolationException {
-        if (src <= upper && src >= lower) {
+        if ( (src <= upper || upper == -1) && src >= lower) {
             return;
         }
         throw new ConstraintViolationException(
