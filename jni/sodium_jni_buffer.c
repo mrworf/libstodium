@@ -128,7 +128,7 @@ void stodium_get_buffer(JNIEnv *jenv, stodium_buffer *dst, jobject jbuffer) {
         dst->offset    = 0;
         dst->capacity  = 0;
         dst->is_direct = true; // A null buffer can be treated as direct
-        __android_log_print(3, "STODIUM", "stodium_get_buffer(NULL)");
+        //__android_log_print(3, "STODIUM", "stodium_get_buffer(NULL)");
         return;
     }
 
@@ -139,7 +139,7 @@ void stodium_get_buffer(JNIEnv *jenv, stodium_buffer *dst, jobject jbuffer) {
         dst->offset    = 0;
         dst->capacity  = (size_t) (*jenv)->GetDirectBufferCapacity(jenv, jbuffer);
         dst->is_direct = true;
-        __android_log_print(3, "STODIUM", "stodium_get_buffer(Direct ByteBuffer, capacity = %d)", dst->capacity);
+        //__android_log_print(3, "STODIUM", "stodium_get_buffer(Direct ByteBuffer, capacity = %d)", dst->capacity);
         return;
     }
 
@@ -152,7 +152,7 @@ void stodium_get_buffer(JNIEnv *jenv, stodium_buffer *dst, jobject jbuffer) {
     dst->offset        = (size_t) (*jenv)->CallIntMethod(jenv, jbuffer, stodium_g_byte_buffer_method_array_offset);
     dst->capacity      = (size_t) (*jenv)->CallIntMethod(jenv, jbuffer, stodium_g_byte_buffer_method_remaining);
     dst->is_direct     = false;
-    __android_log_print(3, "STODIUM", "stodium_get_buffer(Indirect ByteBuffer)");
+    //__android_log_print(3, "STODIUM", "stodium_get_buffer(Indirect ByteBuffer)");
     return;
 }
 
@@ -594,7 +594,10 @@ STODIUM_JNI(jint, crypto_1aead_1chacha20poly1305_1ietf_1encrypt_1detached) (JNIE
 
 STODIUM_JNI(jint, crypto_1aead_1chacha20poly1305_1ietf_1encrypt) (JNIEnv *jenv, jclass jcls,
         jobject dst,
+	jint dst_offset,
         jobject src,
+	jint src_offset,
+	jint src_limit,
         jobject ad,
         jobject nonce,
         jobject key) {
@@ -606,10 +609,10 @@ STODIUM_JNI(jint, crypto_1aead_1chacha20poly1305_1ietf_1encrypt) (JNIEnv *jenv, 
     stodium_get_buffer(jenv, &key_buffer,   key);
  
     jint result = (jint) crypto_aead_chacha20poly1305_ietf_encrypt(
-            AS_OUTPUT(unsigned char, dst_buffer),
+            AS_OUTPUT(unsigned char, dst_buffer)+dst_offset,
             AS_OUTPUT_LEN(unsigned long long, dst_buffer),
-            AS_INPUT(unsigned char, src_buffer),
-            AS_INPUT_LEN(unsigned long long, src_buffer),
+            AS_INPUT(unsigned char, src_buffer)+src_offset,
+            (unsigned long long)src_limit,//AS_INPUT_LEN(unsigned long long, src_buffer),
             AS_INPUT(unsigned char, ad_buffer),
             AS_INPUT_LEN(unsigned long long, ad_buffer),
             NULL, // nsec
@@ -663,7 +666,10 @@ STODIUM_JNI(jint, crypto_1aead_1chacha20poly1305_1ietf_1decrypt_1detached) (JNIE
 
 STODIUM_JNI(jint, crypto_1aead_1chacha20poly1305_1ietf_1decrypt) (JNIEnv *jenv, jclass jcls,
         jobject dst,
+	jint dst_offset,
         jobject src,
+	jint src_offset,
+	jint src_length,
         jobject ad,
         jobject nonce,
         jobject key) {
@@ -675,11 +681,11 @@ STODIUM_JNI(jint, crypto_1aead_1chacha20poly1305_1ietf_1decrypt) (JNIEnv *jenv, 
     stodium_get_buffer(jenv, &key_buffer,   key);
  
     jint result = (jint) crypto_aead_chacha20poly1305_ietf_decrypt(
-            AS_OUTPUT(unsigned char, dst_buffer),
+            AS_OUTPUT(unsigned char, dst_buffer) + dst_offset,
             AS_OUTPUT_LEN(unsigned long long, dst_buffer),
             NULL, // nsec
-            AS_INPUT(unsigned char, src_buffer),
-            AS_INPUT_LEN(unsigned long long, src_buffer),
+            AS_INPUT(unsigned char, src_buffer) + src_offset,
+            (unsigned long long)src_length, //AS_INPUT_LEN(unsigned long long, src_buffer),
             AS_INPUT(unsigned char, ad_buffer),
             AS_INPUT_LEN(unsigned long long, ad_buffer),
             AS_INPUT(unsigned char, nonce_buffer),
