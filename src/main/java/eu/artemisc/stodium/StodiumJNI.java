@@ -160,7 +160,10 @@ public class StodiumJNI {
             @NotNull ByteBuffer key);
     public static native int crypto_aead_chacha20poly1305_ietf_encrypt(
             @NotNull ByteBuffer dstCipher,
+            int dstOffset,
             @NotNull ByteBuffer srcPlain,
+            int srcOffset,
+            int srcLimit,
             @NotNull ByteBuffer ad,
             @NotNull ByteBuffer nonce,
             @NotNull ByteBuffer key);
@@ -173,7 +176,10 @@ public class StodiumJNI {
             @NotNull ByteBuffer key);
     public static native int crypto_aead_chacha20poly1305_ietf_decrypt(
             @NotNull ByteBuffer dstPlain,
+            int dstOffset,
             @NotNull ByteBuffer srcCipher,
+            int srcOffset,
+            int srcLength,
             @NotNull ByteBuffer ad,
             @NotNull ByteBuffer nonce,
             @NotNull ByteBuffer key);

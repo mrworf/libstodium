@@ -60,13 +60,16 @@ final class Chacha20Poly1305Ietf
             throws StodiumException {
         Stodium.checkDestinationWritable(dstCipher);
 
-        Stodium.checkSizeMin(dstCipher.remaining(), srcPlain.remaining() + ABYTES);
+        //Stodium.checkSizeMin(dstCipher.remaining(), srcPlain.remaining() + ABYTES);
         Stodium.checkSizeMin(nonce.remaining(), NPUBBYTES);
         Stodium.checkSize(key.remaining(), KEYBYTES);
 
         Stodium.checkStatus(StodiumJNI.crypto_aead_chacha20poly1305_ietf_encrypt(
                 Stodium.ensureUsableByteBuffer(dstCipher),
+                dstCipher.position(),
                 Stodium.ensureUsableByteBuffer(srcPlain),
+                srcPlain.position(),
+                srcPlain.limit() - srcPlain.position(),
                 Stodium.ensureUsableByteBuffer(ad),
                 Stodium.ensureUsableByteBuffer(nonce),
                 Stodium.ensureUsableByteBuffer(key)));
@@ -104,13 +107,16 @@ final class Chacha20Poly1305Ietf
             throws StodiumException {
         Stodium.checkDestinationWritable(dstPlain);
 
-        Stodium.checkSizeMin(srcCipher.remaining(), dstPlain.remaining() + ABYTES);
+//        Stodium.checkSizeMin(srcCipher.remaining(), dstPlain.remaining() + ABYTES);
         Stodium.checkSizeMin(nonce.remaining(), NPUBBYTES);
         Stodium.checkSize(key.remaining(), KEYBYTES);
 
         return StodiumJNI.NOERR == StodiumJNI.crypto_aead_chacha20poly1305_ietf_decrypt(
                 Stodium.ensureUsableByteBuffer(dstPlain),
+                dstPlain.position(),
                 Stodium.ensureUsableByteBuffer(srcCipher),
+                srcCipher.position(),
+                srcCipher.limit() - srcCipher.position(),
                 Stodium.ensureUsableByteBuffer(ad),
                 Stodium.ensureUsableByteBuffer(nonce),
                 Stodium.ensureUsableByteBuffer(key));
